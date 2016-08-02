@@ -1,3 +1,5 @@
+#!/usr/bin/python2.7
+
 __author__ = 'fucus'
 
 import sys
@@ -12,7 +14,13 @@ import shutil
 from tool.keras_tool import load_image_path_list
 from preprocess.argument import loop_process_train_image
 from preprocess.argument import loop_process_test_image
+from preprocess.argument import shift_left
+from preprocess.argument import shift_down
+from preprocess.argument import shift_right
+from preprocess.argument import shift_up
 import numpy as np
+from scipy.misc import imresize
+
 
 '''
     Save all resized images to training and testing folders.
@@ -44,6 +52,93 @@ def crop_center(img, img_size):
 
     corp_img = img[height_offset:height_offset + img_size[0], width_offset:width_offset + img_size[1], :]
     return corp_img
+
+def extract_human(img):
+    """
+
+    :param img: grey type numpy.array image
+    :return:
+    """
+
+    left_blank = 0
+    right_blank = 0
+
+    up_blank = 0
+    down_blank = 0
+
+    height = img.shape[0]
+    width = img.shape[1]
+
+    for i in range(height):
+        if np.sum(img[i, :]) == 0:
+            up_blank += 1
+        else:
+            break
+
+    for i in range(height-1, -1, -1):
+        if np.sum(img[i, :]) == 0:
+            down_blank += 1
+        else:
+            break
+
+    for i in range(width):
+        if np.sum(img[:, i]) == 0:
+            left_blank += 1
+        else:
+            break
+
+    for i in range(width-1, -1, -1):
+        if np.sum(img[:, i]) == 0:
+            right_blank += 1
+        else:
+            break
+
+    is_grey = True
+    img = shift_left(img, left_blank, is_grey)
+    img = shift_right(img, right_blank, is_grey)
+    img = shift_up(img, up_blank, is_grey)
+    img = shift_down(img, down_blank, is_grey)
+    return img
+
+def center_person(img, size):
+    """
+
+    :param img: grey image, numpy.array datatype
+    :param size: tuple, for example(120, 160), first number for height, second for width
+    :return:
+    """
+
+    highest_index = 0
+    highest = 0
+    origin_height, origin_width = img.shape
+
+    for i in range(origin_width):
+        data = img[:, i]
+        for j, val in enumerate(data):
+
+            # encounter body
+            if val > 0:
+                now_height = origin_height - j
+                if now_height > highest:
+                    highest = now_height
+                    highest_index = i
+                break
+
+    left_part_column_count = highest_index
+    right_part_column_count = origin_width - left_part_column_count - 1
+
+    if left_part_column_count == right_part_column_count:
+        return imresize(img, size)
+    elif left_part_column_count > right_part_column_count:
+        right_padding_column_count = left_part_column_count - right_part_column_count
+        new_img = np.zeros((origin_height, origin_width + right_padding_column_count), dtype=np.int)
+        new_img[:, :origin_width] = img
+    else:
+        left_padding_column_count = right_part_column_count - left_part_column_count
+        new_img = np.zeros((origin_height, origin_width + left_padding_column_count), dtype=np.int)
+        new_img[:, left_padding_column_count:] = img
+
+    return imresize(new_img, size)
 
 def add_padding_main(from_path, img_size, force=False):
     for path in from_path:
@@ -81,12 +176,26 @@ def crop_image_main(from_path, img_size, force=False):
         else:
             loop_process_test_image(path, to_path, crop_center, args, force)
 
+def extract_human_center(img, img_size):
+    return center_person(extract_human(img), img_size)
+
+def extract_human_center_main(from_path, img_size, force=False):
+    for path in from_path:
+        img_size_str_list = [str(x) for x in img_size]
+        to_path = "%s_extract_%s" % (path, "_".join(img_size_str_list))
+        args = {"img_size": img_size}
+        if '001' in os.listdir(path):
+            loop_process_train_image(path, to_path, extract_human_center, args, force)
+        else:
+            loop_process_test_image(path, to_path, extract_human_center, args, force)
+
+     
+
 if __name__ == "__main__":
     level = logging.DEBUG
     FORMAT = '%(asctime)-12s[%(levelname)s] %(message)s'
     logging.basicConfig(level=level, format=FORMAT, datefmt='%Y-%m-%d %H:%M:%S')
-    driver = skio.imread(config.Project.project_path + "/test_image/img_94.jpg")
-    driver = skio.imread(config.Project.test_img_example_path)
-    to_size = (336, 480)
-    crop = crop_center(driver, to_size)
-    skio.imsave("crop_center_new.jpg", crop)
+    img_size = (210, 70)
+    from_path = ["/home/chenqiang/data/gait-simple-cnn-data/nm-data"]
+    force = True
+    extract_human_center_main(from_path, img_size, force)

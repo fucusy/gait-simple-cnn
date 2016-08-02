@@ -45,15 +45,15 @@ def load_image_path_list(path):
     :return:
     """
     list_path = os.listdir(path)
-    result = ["%s/%s" % (path, x) for x in list_path if x.endswith("jpg")]
+    result = ["%s/%s" % (path, x) for x in list_path if x.endswith("jpg") or x.endswith("png")]
     return np.array(result)
 
 
 def load_train_image_path_list_and_label(train_path):
     label_list = []
     result_list = []
-    for x in range(10):
-        sub_folder = 'c%d' % x
+    for x in range(1, 125):
+        sub_folder = '%03d' % x
         path = "%s/%s" % (train_path, sub_folder)
         result = load_image_path_list(path)
         label_list += [x] * len(result)
@@ -89,54 +89,27 @@ def image_preprocess(image):
 
     return image
 
-def load_test_data_set(test_image_path, feature_dir, for_cnn=True):
+def load_test_data_set(test_image_path, for_cnn=True):
     test_image_list = load_image_path_list(test_image_path)
-    return DataSet(test_image_list, feature_dir=feature_dir, for_cnn=for_cnn)
+    return DataSet(test_image_list, for_cnn=for_cnn)
 
 
-def load_data(train_folder, test_folder, feature_dir=None, for_cnn=True):
+def load_data(train_dirs, test_dirs, for_cnn=True):
     """
 
-    :param train_folder:
-    :param test_folder:
+    :param train_dirs:
+    :param test_dirs:
     :return: three DataSet structure include train data, validation data, test data
     """
-    test_data = load_test_data_set(test_folder, feature_dir, for_cnn=for_cnn)
-    train_data, validation_data = load_train_validation_data_set(train_folder,\
-            feature_dir=feature_dir, for_cnn=for_cnn)
+    test_data = load_test_data_set(test_dirs, for_cnn=for_cnn)
+    train_data, validation_data = load_train_validation_data_set(train_dirs,\
+                for_cnn=for_cnn)
 
     return train_data, validation_data, test_data
 
 
-def get_image_to_person(file_path=config.Project.driver_img_list_path):
+def load_train_validation_data_set(path, val_ids=["nm-05", "nm-06"], to_category=True, for_cnn=True):
     """
-    :param file_path: the driver list .cvs file path
-    :return: a image_id to person dictionary, image_id means the name remove suffix like '.jpg'
-    """
-
-    image_id_to_person = {}
-    count = 0
-
-    for line in open(file_path):
-
-        # ignore first line
-        if count == 0:
-            count += 1
-            continue
-
-        count += 1
-        split_line = line.rstrip('\n').split(',')
-        if len(split_line) == 3:
-            person = split_line[0]
-            driver_type = split_line[1]
-            image_id = split_line[2].split('.')[0]
-            image_id_to_person[image_id] = person
-    return image_id_to_person
-
-
-def load_train_validation_data_set(path, feature_dir=None, validation_split=0.2, to_category=True, for_cnn=True):
-    """
-    param: validation_spilt, how many percent driver to be vlidation
     param: to_category, if it's true, the result image label will be a 10 length vector
     param: for_cnn, if it's true, the returned DataSet will do transpose, and sub mean RBG value, else returned DataSet do not
 
@@ -155,15 +128,6 @@ def load_train_validation_data_set(path, feature_dir=None, validation_split=0.2,
         logging.debug("train validation data from %s" % path)
         image_list, image_label = load_train_image_path_list_and_label(path)
 
-    img_to_person = get_image_to_person()
-    driver_list = sorted(set(img_to_person.values()))
-    train_driver_index_end = int(len(driver_list) * (1-validation_split))
-    train_driver_list = driver_list[:train_driver_index_end]
-    validation_driver_list = driver_list[train_driver_index_end:]
-
-    logging.info("load train data from driver %s" % ",".join(train_driver_list))
-    logging.info("load validation data from driver %s" % ",".join(validation_driver_list))
-
     train_image_list = []
     train_image_label = []
 
@@ -172,15 +136,16 @@ def load_train_validation_data_set(path, feature_dir=None, validation_split=0.2,
 
     for i in range(len(image_list)):
         image_id = os.path.basename(image_list[i]).split('.')[0]
+        seq_id = "-".join(image_id.split("-")[2:4])
 
-        if img_to_person[image_id] in train_driver_list:
-            train_image_list.append(image_list[i])
-            train_image_label.append(image_label[i])
-        else:
+        if seq_id in val_ids:
             validation_image_list.append(image_list[i])
             validation_image_label.append(image_label[i])
+        else:
+            train_image_list.append(image_list[i])
+            train_image_label.append(image_label[i])
 
-    return DataSet(train_image_list, train_image_label, to_category, for_cnn=for_cnn, feature_dir=feature_dir), DataSet(validation_image_list, validation_image_label, to_category, for_cnn=for_cnn, feature_dir=feature_dir)
+    return DataSet(train_image_list, train_image_label, to_category, for_cnn=for_cnn, ), DataSet(validation_image_list, validation_image_label, to_category, for_cnn=for_cnn)
 
 
 

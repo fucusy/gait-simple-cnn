@@ -13,8 +13,7 @@ import shutil
 import skimage.io as skio
 import logging
 from tool.keras_tool import load_image_path_list
-
-def shift_left(img, left=10.0):
+def shift_left(img, left=10.0, is_grey=False):
     """
 
     :param numpy.array img: represented by numpy.array
@@ -28,19 +27,25 @@ def shift_left(img, left=10.0):
         left = int(left)
 
     img_shift_left = np.zeros(img.shape)
-    if left > 0:
-        img_shift_left = img[:, left:, :]
+    if left >= 0:
+        if is_grey:
+            img_shift_left = img[:, left:]
+        else:
+            img_shift_left = img[:, left:, :]
     else:
-        img_shift_left = img[:, :left, :]
+        if is_grey:
+            img_shift_left = img[:, :left]
+        else:
+            img_shift_left = img[:, :left, :]
 
     return img_shift_left
 
 
-def shift_right(img, right=10.0):
-    return shift_left(img, -right)
+def shift_right(img, right=10.0, is_grey=False):
+    return shift_left(img, -right, is_grey)
 
 
-def shift_up(img, up=10.0):
+def shift_up(img, up=10.0, is_grey=False):
     """
     :param numpy.array img: represented by numpy.array
     :param float up: how many pixels to shift to up, this value can be negative that means shift to
@@ -55,15 +60,21 @@ def shift_up(img, up=10.0):
         up = int(up)
 
     img_shift_up = np.zeros(img.shape)
-    if up > 0:
-        img_shift_up = img[up:, :, :]
+    if up >= 0:
+        if is_grey:
+            img_shift_up = img[up:, :]
+        else:
+            img_shift_up = img[up:, :, :]
     else:
-        img_shift_up = img[:up, :, :]
+        if is_grey:
+            img_shift_up = img[:up, :]
+        else:
+            img_shift_up = img[:up, :, :]
 
     return img_shift_up
 
-def shift_down(img, down=10.0):
-    return shift_up(img, -down)
+def shift_down(img, down=10.0, is_grey=False):
+    return shift_up(img, -down, is_grey)
 
 def loop_process_test_image(from_path, to_path, method, args, force=False):
     if force:
@@ -103,9 +114,8 @@ def loop_process_train_image(from_path, to_path, method, args, force=False):
         logging.info("save path exists, no need to process again, skip this")
         return
 
-    class_list = ['c0', 'c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8', 'c9']
+    class_list = ["%03d" % x for x in range(1, 125)]
     logging.info("doing process now, saving  result to %s" % os.path.basename(to_path))
-
     if not os.path.exists(to_path):
         for c in class_list:
             class_path = os.path.join(to_path, c)
@@ -127,11 +137,14 @@ def loop_process_train_image(from_path, to_path, method, args, force=False):
             f = os.path.basename(file_path)
             img = skio.imread(file_path)
             args["img"] = img
-            img = method(**args)
-            save_path = os.path.join(to_path, c, f)
-            skio.imsave(save_path, img)
-    logging.info("process done saving data to %s" % os.path.basename(to_path))
+            try:
+                img = method(**args)
+                save_path = os.path.join(to_path, c, f)
+                skio.imsave(save_path, img)
+            except:
+                logging.warning("fail to process %s" % file_path)
 
+    logging.info("process done saving data to %s" % os.path.basename(to_path))
 
 
 def argument_main():
