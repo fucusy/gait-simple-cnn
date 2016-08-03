@@ -6,13 +6,13 @@ import config
 from tool.model_tools import KerasModel
 from tool.keras_tool import load_data
 import model.cnn_model as model_factory
-import numpy as np
+from tool.keras_tool import normalization_grey_image
 
 
 import logging
 
 if __name__ == '__main__':
-    level = logging.DEBUG
+    level = logging.INFO
     FORMAT = '%(asctime)-12s[%(levelname)s] %(message)s'
     logging.basicConfig(level=level, format=FORMAT, datefmt='%Y-%m-%d %H:%M:%S')
 
@@ -27,9 +27,7 @@ if __name__ == '__main__':
     
     weights_path = config.CNN.keras_train_weight
     lr = config.CNN.lr
-
-
     cnn_model = model_func(lr, weights_path=None)
 
-    model = KerasModel(cnn_model=cnn_model)
+    model = KerasModel(cnn_model=cnn_model, preprocess_func=normalization_grey_image)
     model.train_model(train_data, validation_data, save_best=True)

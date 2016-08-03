@@ -75,6 +75,13 @@ def resize_and_mean(image, size=(224, 224), mean=(103.939, 116.779, 123.68)):
     for c in range(3):
         img_resized[c, :, :] = img_resized[c, :, :] - mean[c]
     return img_resized
+
+def normalization_grey_image(image):
+    image = image.astype(np.float32)
+    image /= 255
+    return image
+
+
 def image_preprocess(image):
     """
 
@@ -227,8 +234,7 @@ class DataSet(object):
         self.set_index_in_epoch(index_in_epoch)
         return result
 
-    def next_fragment(self, fragment_size, preprocess_fuc=image_preprocess\
-                        , need_label=False):
+    def next_fragment(self, fragment_size, preprocess_fuc=None, need_label=False):
 
         start = self._index_in_epoch
         end = min(self._index_in_epoch + fragment_size, self._num_examples)
@@ -238,6 +244,9 @@ class DataSet(object):
             feature_list = self.image_path_2_pic(image_paths, preprocess_fuc)
         else:
             feature_list = self.image_path_2_feature(image_paths)
+
+        if len(feature_list.shape) == 3:
+            feature_list = feature_list.reshape(feature_list.shape[0], 1, feature_list.shape[1], feature_list.shape[2])
         image_paths = [os.path.basename(x) for x in image_paths]
         if need_label and self._images_label is not None:
             return feature_list, self._images_label[start:end], image_paths

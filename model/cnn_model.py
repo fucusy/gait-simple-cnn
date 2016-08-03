@@ -101,18 +101,17 @@ def simple_cnn_for_test(lr=1e-3, weights_path=None):
     else:
         model = Sequential()
         model.add(ZeroPadding2D((1, 1), input_shape=(1, img_rows, img_cols)))
-        model.add(Convolution2D(32, 3, 3, activation='relu'))
+        model.add(Convolution2D(6, 3, 3, activation='relu'))
         model.add(ZeroPadding2D((1, 1)))
-        model.add(Convolution2D(32, 3, 3, activation='relu'))
+        model.add(Convolution2D(6, 3, 3, activation='relu'))
         model.add(MaxPooling2D((2, 2), strides=(2, 2)))
 
         model.add(ZeroPadding2D((1, 1)))
-        model.add(Convolution2D(32, 3, 3, activation='relu'))
+        model.add(Convolution2D(6, 3, 3, activation='relu'))
         model.add(ZeroPadding2D((1, 1)))
-        model.add(Convolution2D(32, 3, 3, activation='relu'))
+        model.add(Convolution2D(6, 3, 3, activation='relu'))
 
         model.add(Flatten())
-        model.add(Dense(4096, activation='relu'))
         # replace more fc layer
         model.add(Dense(124, activation='softmax'))
 

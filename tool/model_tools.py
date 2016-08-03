@@ -124,7 +124,7 @@ class KerasFeatureExtractor(object):
 
 
 class KerasModel(object):
-    def __init__(self, cnn_model):
+    def __init__(self, cnn_model, preprocess_func):
         model_name = config.CNN.model_name
         test_batch_size = config.CNN.test_batch_size
         n_iter = config.CNN.train_iter
@@ -147,6 +147,7 @@ class KerasModel(object):
         self.min_loss = np.inf
         self.max_acc = 0.
         self.fragment_size = config.CNN.load_image_to_memory_every_time
+        self.preprocess_func = preprocess_func
     
     def set_model_arch(self, model_arch):
         self._model = model_arch
@@ -169,7 +170,7 @@ class KerasModel(object):
         validation_data.reset_index()
 
         while validation_data.have_next():
-            x_valid, y_valid, _ = validation_data.next_fragment(self.fragment_size, need_label=True)
+            x_valid, y_valid, _ = validation_data.next_fragment(self.fragment_size, need_label=True, preprocess_fuc=self.preprocess_func)
             image_count += len(x_valid)
             logger.info('%s | --> validation progress %d / %d'
                   % (self._model_name, image_count, validation_data.count()))
@@ -205,6 +206,8 @@ class KerasModel(object):
     def train_model(self, train_data, validation_data, save_best=True):
         json_string = self._model.to_json()
         json_path = os.path.join(self._model_save_path, self._model_name + '.json')
+        if not os.path.exists(self._model_save_path):
+            os.makedirs(self._model_save_path)
         open(json_path, 'w').write(json_string)
 
         fragment_size = config.CNN.load_image_to_memory_every_time
@@ -224,10 +227,10 @@ class KerasModel(object):
                 validate_every_img = 4000
                 validate_after = validate_every_img
                 while train_data.have_next():
-                    x_train, y_train, _ = train_data.next_fragment(fragment_size,need_label=True)
+                    x_train, y_train, _ = train_data.next_fragment(fragment_size,need_label=True, preprocess_fuc=self.preprocess_func)
                     image_count += len(x_train)
                     if not have_print_data_shape:
-                        logging.info("the input data shape is %s" % x_train[0].shape)
+                        print("the input data shape is", x_train[0].shape)
                         have_print_data_shape = not have_print_data_shape
                     logging.info('%s | iter %03d --> training progress  %d / %d'
                                    % (self._model_name, it, image_count, train_data.count()))
@@ -263,7 +266,7 @@ class KerasModel(object):
         if fragment_size > 0:
             while test_data.have_next():
 
-                x_test, name_list = test_data.next_fragment(fragment_size, need_label=False)
+                x_test, name_list = test_data.next_fragment(fragment_size, need_label=False, preprocess_fuc=self.preprocess_func)
                 image_count += len(x_test)
                 logger.info('%s | --> testing progress %d / %d' % (self._model_name,
                                        image_count, test_data.count()))
