@@ -3,8 +3,8 @@
 import os
 import shutil
 
-source_path = "/home/chenqiang/data/CASIA_full_gait_data/DatasetB/silhouettes"
-target_path = "/home/chenqiang/data/gait-simple-cnn-data/nm-data"
+source_path = "/Volumes/Passport/data/CASIA_full_gait_data_set/DatasetB/silhouettes"
+target_path = "/Volumes/Passport/data/gait-simple-cnn-data"
 
 gait_type = "nm"
 gait_seq = ["01", "02", "03", "04", "05", "06"]

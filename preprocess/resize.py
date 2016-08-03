@@ -192,10 +192,10 @@ def extract_human_center_main(from_path, img_size, force=False):
      
 
 if __name__ == "__main__":
-    level = logging.DEBUG
+    level = logging.INFO
     FORMAT = '%(asctime)-12s[%(levelname)s] %(message)s'
     logging.basicConfig(level=level, format=FORMAT, datefmt='%Y-%m-%d %H:%M:%S')
     img_size = (210, 70)
-    from_path = ["/home/chenqiang/data/gait-simple-cnn-data/nm-data"]
+    from_path = ["/Volumes/Passport/data/gait-simple-cnn-data"]
     force = True
     extract_human_center_main(from_path, img_size, force)

@@ -1,0 +1,17 @@
+# ignore OS X system files
+.DS_Store
+
+# ignore IDE generated files
+.idea
+
+# ignore python cache
+__pycache__
+*/__pycache__
+*.pyc
+
+# ignore configuration file
+config.py
+
+# ignore tmp dir
+data
+

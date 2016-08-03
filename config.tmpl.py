@@ -1,7 +1,5 @@
 __author__ = 'fucus'
 
-from model.models import RandomForestClassification
-
 class Project:
 
     # required, your project's absolute path, in other way, it's the absolute path for this file

@@ -56,7 +56,7 @@ def load_train_image_path_list_and_label(train_path):
         sub_folder = '%03d' % x
         path = "%s/%s" % (train_path, sub_folder)
         result = load_image_path_list(path)
-        label_list += [x] * len(result)
+        label_list += [x-1] * len(result)
         result_list += list(result)
     return np.array(result_list), np.array(label_list)
 
@@ -94,18 +94,16 @@ def load_test_data_set(test_image_path, for_cnn=True):
     return DataSet(test_image_list, for_cnn=for_cnn)
 
 
-def load_data(train_dirs, test_dirs, for_cnn=True):
+def load_data(train_dirs, for_cnn=True):
     """
 
     :param train_dirs:
     :param test_dirs:
     :return: three DataSet structure include train data, validation data, test data
     """
-    test_data = load_test_data_set(test_dirs, for_cnn=for_cnn)
-    train_data, validation_data = load_train_validation_data_set(train_dirs,\
-                for_cnn=for_cnn)
+    train_data, validation_data = load_train_validation_data_set(train_dirs, for_cnn=for_cnn)
 
-    return train_data, validation_data, test_data
+    return train_data, validation_data
 
 
 def load_train_validation_data_set(path, val_ids=["nm-05", "nm-06"], to_category=True, for_cnn=True):
@@ -136,7 +134,7 @@ def load_train_validation_data_set(path, val_ids=["nm-05", "nm-06"], to_category
 
     for i in range(len(image_list)):
         image_id = os.path.basename(image_list[i]).split('.')[0]
-        seq_id = "-".join(image_id.split("-")[2:4])
+        seq_id = "-".join(image_id.split("-")[1:3])
 
         if seq_id in val_ids:
             validation_image_list.append(image_list[i])
@@ -164,7 +162,7 @@ class DataSet(object):
         if image_label_list is not None:
             self._one_images_label = np.array(image_label_list)
             if to_category:
-                image_label_list = to_categorical(np.array(image_label_list), 10)
+                image_label_list = to_categorical(np.array(image_label_list), 124)
             else:
                 image_label_list = np.array(image_label_list)
 
@@ -173,7 +171,6 @@ class DataSet(object):
         self._epochs_completed = 0
         self._index_in_epoch = 0
         self._for_cnn = for_cnn
-        self.mean_img = imread(config.Data.mean_image_file_name)
         self.feature_dir = feature_dir
         if image_label_list is not None:
             random = 2016
