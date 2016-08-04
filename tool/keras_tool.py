@@ -227,21 +227,22 @@ class DataSet(object):
 
     def have_next(self):
         return self._index_in_epoch < self._num_examples
-    def load_all_image(self, need_label=False):
+    def load_all_image(self, need_label=False, preprocess_func=None):
         index_in_epoch = self._index_in_epoch
         self.reset_index()
-        result = self.next_fragment(self.num_examples, need_label)
+        result = self.next_fragment(self.num_examples, need_label=need_label\
+                                        ,preprocess_func=preprocess_func)
         self.set_index_in_epoch(index_in_epoch)
         return result
 
-    def next_fragment(self, fragment_size, preprocess_fuc=None, need_label=False):
+    def next_fragment(self, fragment_size, preprocess_func=None, need_label=False):
 
         start = self._index_in_epoch
         end = min(self._index_in_epoch + fragment_size, self._num_examples)
         self._index_in_epoch = end
         image_paths = self._images_path[start:end]
         if self.feature_dir is None:
-            feature_list = self.image_path_2_pic(image_paths, preprocess_fuc)
+            feature_list = self.image_path_2_pic(image_paths, preprocess_func)
         else:
             feature_list = self.image_path_2_feature(image_paths)
 

@@ -29,7 +29,7 @@ def simple_cnn_vgg_like(lr=1e-3, weights_path=None):
     img_rows, img_cols = 210, 70
     # standard VGG16 network architecture
     
-    structure_path = "%s/cache/simple_cnn_vgg_like.json" % config.Project.project_path
+    structure_path = "%s/cache/simple_cnn_vgg_like.json" % config.project.project_path
     if weights_path is not None and os.path.exists(weights_path) \
         and os.path.exists(structure_path):
 
@@ -38,48 +38,14 @@ def simple_cnn_vgg_like(lr=1e-3, weights_path=None):
         model.load_weights(weights_path)
     else:
         model = Sequential()
-        model.add(ZeroPadding2D((1, 1), input_shape=(img_rows, img_cols)))
-        model.add(Convolution2D(64, 3, 3, activation='relu'))
+        model.add(ZeroPadding2D((1, 1), input_shape=(1, img_rows, img_cols)))
+        model.add(Convolution2D(64, 7, 7, activation='relu'))
         model.add(ZeroPadding2D((1, 1)))
-        model.add(Convolution2D(64, 3, 3, activation='relu'))
+        model.add(Convolution2D(64, 7, 7, activation='relu'))
         model.add(MaxPooling2D((2, 2), strides=(2, 2)))
-    
-        model.add(ZeroPadding2D((1, 1)))
-        model.add(Convolution2D(128, 3, 3, activation='relu'))
-        model.add(ZeroPadding2D((1, 1)))
-        model.add(Convolution2D(128, 3, 3, activation='relu'))
-        model.add(MaxPooling2D((2, 2), strides=(2, 2)))
-    
-        model.add(ZeroPadding2D((1, 1)))
-        model.add(Convolution2D(256, 3, 3, activation='relu'))
-        model.add(ZeroPadding2D((1, 1)))
-        model.add(Convolution2D(256, 3, 3, activation='relu'))
-        model.add(ZeroPadding2D((1, 1)))
-        model.add(Convolution2D(256, 3, 3, activation='relu'))
-        model.add(MaxPooling2D((2, 2), strides=(2, 2)))
-    
-        model.add(ZeroPadding2D((1, 1)))
-        model.add(Convolution2D(512, 3, 3, activation='relu'))
-        model.add(ZeroPadding2D((1, 1)))
-        model.add(Convolution2D(512, 3, 3, activation='relu'))
-        model.add(ZeroPadding2D((1, 1)))
-        model.add(Convolution2D(512, 3, 3, activation='relu'))
-        model.add(MaxPooling2D((2, 2), strides=(2, 2)))
-    
-        model.add(ZeroPadding2D((1, 1)))
-        model.add(Convolution2D(512, 3, 3, activation='relu'))
-        model.add(ZeroPadding2D((1, 1)))
-        model.add(Convolution2D(512, 3, 3, activation='relu'))
-        model.add(ZeroPadding2D((1, 1)))
-        model.add(Convolution2D(512, 3, 3, activation='relu'))
-        model.add(MaxPooling2D((2, 2), strides=(2, 2)))
-    
+
         model.add(Flatten())
         model.add(Dense(4096, activation='relu'))
-        model.add(Dropout(0.5))
-        model.add(Dense(4096, activation='relu'))
-        model.add(Dropout(0.5))
-        model.add(Dense(1000, activation='relu'))
         model.add(Dropout(0.5))
 
         # replace more fc layer
@@ -128,7 +94,7 @@ def VGG_16_replace_fc(lr=1e-3, weights_path=None):
     img_rows, img_cols, color_type = 224, 224, 3
     # standard VGG16 network architecture
 
-    structure_path = "%s/cache/VGG_16_replace_fc.json" % config.Project.project_path
+    structure_path = "%s/cache/VGG_16_replace_fc.json" % config.project.project_path
     if weights_path is not None and os.path.exists(weights_path) \
         and os.path.exists(structure_path):
 
@@ -184,7 +150,7 @@ def VGG_16_replace_fc(lr=1e-3, weights_path=None):
 
         # load the weights
         
-        f = h5py.File(config.Project.vgg_weight_file_path)
+        f = h5py.File(config.project.vgg_weight_file_path)
         
         # load weight except fully connected layers
         for k in range(31):
@@ -259,7 +225,7 @@ def VGG_16_add_layer(lr=1e-3, weights_path=None):
 
         # load the weights
         
-        f = h5py.File(config.Project.vgg_weight_file_path)
+        f = h5py.File(config.project.vgg_weight_file_path)
         
         # we don't look at the last (fully-connected) layers in the savefile
         for k in range(f.attrs['nb_layers']):
@@ -280,7 +246,7 @@ def VGG_16():
     img_rows, img_cols, color_type = 224, 224, 3
     # standard VGG16 network architecture
     
-    vgg_weight = config.Project.vgg_weight_file_path
+    vgg_weight = config.project.vgg_weight_file_path
 
     model = Sequential()
     model.add(ZeroPadding2D((1, 1), input_shape=(color_type,
@@ -328,7 +294,7 @@ def VGG_16():
     model.add(Dense(1000, activation='softmax'))
 
     # load the weights
-    model.load_weights(config.Project.vgg_weight_file_path)
+    model.load_weights(config.project.vgg_weight_file_path)
     logging.debug("load weigth from vgg weight")
     logging.debug('Model loaded.')
 
@@ -342,7 +308,7 @@ def VGG_16():
 def VGG_16_freeze(lr=1e-3, weights_path=None):
     # standard VGG16 network architecture
     img_rows, img_cols, color_type = 224, 224, 3
-    vgg_weight = config.Project.vgg_weight_file_path
+    vgg_weight = config.project.vgg_weight_file_path
 
     model = Sequential()
     model.add(ZeroPadding2D((1, 1), input_shape=(color_type,
@@ -403,7 +369,7 @@ def VGG_16_freeze(lr=1e-3, weights_path=None):
 
     if weights_path is None or not weights_path_exist:
         logging.debug("load weigth from vgg weight")
-        model.load_weights(config.Project.vgg_weight_file_path)
+        model.load_weights(config.project.vgg_weight_file_path)
 
     # load model weights
     if weights_path is not None and weights_path_exist:
@@ -421,7 +387,7 @@ def VGG_16_add_layer_freeze(lr=1e-3, weights_path=None):
     img_rows, img_cols, color_type = 224, 224, 3
     # standard VGG16 network architecture
     
-    structure_path = "%s/cache/VGG_16_add_layer_freeze.json" % config.Project.project_path
+    structure_path = "%s/cache/VGG_16_add_layer_freeze.json" % config.project.project_path
     if weights_path is not None and os.path.exists(weights_path) \
         and os.path.exists(structure_path):
 
@@ -479,7 +445,7 @@ def VGG_16_add_layer_freeze(lr=1e-3, weights_path=None):
 
         # load the weights
         
-        f = h5py.File(config.Project.vgg_weight_file_path)
+        f = h5py.File(config.project.vgg_weight_file_path)
         
         # we don't look at the last (fully-connected) layers in the savefile
         for k in range(f.attrs['nb_layers']):

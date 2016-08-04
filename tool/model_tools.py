@@ -130,7 +130,7 @@ class KerasModel(object):
         n_iter = config.CNN.train_iter
         model_weights_file = config.CNN.model_weights_file_name
         model_save_path = config.CNN.model_save_path
-        prediction_save_file = config.Project.result_output_path + "/" +time.strftime("%Y_%m_%d__%H_%M.csv")
+        prediction_save_file = config.project.result_output_path + "/" +time.strftime("%Y_%m_%d__%H_%M.csv")
 
         self._model_name = model_name
         self._n_iter = n_iter
@@ -170,7 +170,7 @@ class KerasModel(object):
         validation_data.reset_index()
 
         while validation_data.have_next():
-            x_valid, y_valid, _ = validation_data.next_fragment(self.fragment_size, need_label=True, preprocess_fuc=self.preprocess_func)
+            x_valid, y_valid, _ = validation_data.next_fragment(self.fragment_size, need_label=True, preprocess_func=self.preprocess_func)
             image_count += len(x_valid)
             logger.info('%s | --> validation progress %d / %d'
                   % (self._model_name, image_count, validation_data.count()))
@@ -227,7 +227,7 @@ class KerasModel(object):
                 validate_every_img = 4000
                 validate_after = validate_every_img
                 while train_data.have_next():
-                    x_train, y_train, _ = train_data.next_fragment(fragment_size,need_label=True, preprocess_fuc=self.preprocess_func)
+                    x_train, y_train, _ = train_data.next_fragment(fragment_size,need_label=True, preprocess_func=self.preprocess_func)
                     image_count += len(x_train)
                     if not have_print_data_shape:
                         print("the input data shape is", x_train[0].shape)
@@ -250,11 +250,14 @@ class KerasModel(object):
                 checkpoint = ModelCheckpoint(weight_path, monitor='val_loss', verbose=0, save_best_only=True, mode='auto')
                 CallBacks.append(checkpoint)
 
-            x_train, y_train, _ = train_data.load_all_image(need_label=True)
-            x_vali, y_vali, _ = validation_data.load_all_image(need_label=True)
+            x_train, y_train, _ = train_data.load_all_image(need_label=True\
+                                        ,preprocess_func=self.preprocess_func)
+            x_vali, y_vali, _ = validation_data.load_all_image(need_label=True\
+                                        ,preprocess_func=self.preprocess_func)
 
-            self._history = self._model.fit(x_train, y_train, batch_size=self._batch_size, nb_epoch=self._n_iter,
-                                             validation_data=(x_vali, y_vali), callbacks=CallBacks)
+            self._history = self._model.fit(x_train, y_train\
+                            , batch_size=self._batch_size, nb_epoch=self._n_iter\
+                            ,validation_data=(x_vali, y_vali), callbacks=CallBacks)
 
     def predict_model(self, test_data):
         image_count = 0
@@ -266,7 +269,7 @@ class KerasModel(object):
         if fragment_size > 0:
             while test_data.have_next():
 
-                x_test, name_list = test_data.next_fragment(fragment_size, need_label=False, preprocess_fuc=self.preprocess_func)
+                x_test, name_list = test_data.next_fragment(fragment_size, need_label=False, preprocess_func=self.preprocess_func)
                 image_count += len(x_test)
                 logger.info('%s | --> testing progress %d / %d' % (self._model_name,
                                        image_count, test_data.count()))

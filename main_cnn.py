@@ -16,7 +16,7 @@ if __name__ == '__main__':
     FORMAT = '%(asctime)-12s[%(levelname)s] %(message)s'
     logging.basicConfig(level=level, format=FORMAT, datefmt='%Y-%m-%d %H:%M:%S')
 
-    train_img_dirs = ["/Volumes/Passport/data/gait-simple-cnn-data_extract_210_70"]
+    train_img_dirs = config.project.train_img_dirs
 
     train_data, validation_data = load_data(train_img_dirs)
 
