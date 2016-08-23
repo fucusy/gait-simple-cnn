@@ -113,7 +113,7 @@ def load_data(train_dirs, for_cnn=True):
     return train_data, validation_data
 
 
-def load_train_validation_data_set(path, val_ids=["nm-05", "nm-06"], to_category=True, for_cnn=True):
+def load_train_validation_data_set(path, val_ids=["nm-05", "nm-06"], to_category=True, for_cnn=True, val_angle="072"):
     """
     param: to_category, if it's true, the result image label will be a 10 length vector
     param: for_cnn, if it's true, the returned DataSet will do transpose, and sub mean RBG value, else returned DataSet do not
@@ -142,8 +142,9 @@ def load_train_validation_data_set(path, val_ids=["nm-05", "nm-06"], to_category
     for i in range(len(image_list)):
         image_id = os.path.basename(image_list[i]).split('.')[0]
         seq_id = "-".join(image_id.split("-")[1:3])
+        angle = image_id.split("-")[3]
 
-        if seq_id in val_ids:
+        if angle == val_angle:
             validation_image_list.append(image_list[i])
             validation_image_label.append(image_label[i])
         else:

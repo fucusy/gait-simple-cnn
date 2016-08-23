@@ -169,14 +169,49 @@ class KerasModel(object):
         # set index to zero, prepare for have_next function
         validation_data.reset_index()
 
+        correct_count = {}
+        all_count = {}
+
         while validation_data.have_next():
-            x_valid, y_valid, _ = validation_data.next_fragment(self.fragment_size, need_label=True, preprocess_func=self.preprocess_func)
+            x_valid, y_valid, img_paths = validation_data.next_fragment(self.fragment_size, need_label=True, preprocess_func=self.preprocess_func)
             image_count += len(x_valid)
             logger.info('%s | --> validation progress %d / %d'
                   % (self._model_name, image_count, validation_data.count()))
+
+
+            # gather data for calculating user 
+            # defined classfication accuracy
+
+            y = self._model.predict(x_valid, batch_size=self._batch_size)
+            dense_y = np.argmax(y, axis=1)
+            for i in range(len(img_paths)):
+                person_id = int(img_paths[i].split("-")[0]) - 1
+                if person_id not in all_count:
+                    all_count[person_id] = 1
+                else:
+                    all_count[person_id] += 1
+
+                if person_id == dense_y[i]:
+                    if person_id not in correct_count:
+                        correct_count[person_id] = 1
+                    else:
+                        correct_count[person_id] += 1
+
+
+
             loss, acc = self._model.evaluate(x_valid, y_valid, batch_size=self._batch_size)
             eva_loss.append(loss)
             eva_acc.append(acc)
+
+        # calculating user defined classfication accuracy
+        correct = 0
+        for p_id in all_count.keys():
+            if p_id in correct_count.keys():
+                if correct_count[p_id] * 1.0 / all_count[p_id] > 0.5:
+                    correct += 1
+
+        user_defined_acc = correct * 1.0 / len(all_count)
+        logger.info("final classfica accuracy = %0.2f" % user_defined_acc)
 
         logger.info('Compute mean evaluation loss and accuracy and output them.')
         eva_loss = float(np.mean(eva_loss))
